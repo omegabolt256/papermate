@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Medical Research Agent v4.0
+PaperMate v1.0 — AI Research Assistant
 Smart, working, practical.
 """
 import sys, os, textwrap, subprocess, webbrowser
@@ -28,7 +28,7 @@ def dashboard():
         
         print(f"""
 ╔══════════════════════════════════════════════╗
-║     MEDICAL RESEARCH AGENT                    ║
+║     PAPERMATE — AI Research Assistant         ║
 ╚══════════════════════════════════════════════╝
 
   PROJECTS ({len(project_mgr.get_all_projects())} total)
@@ -401,19 +401,37 @@ def download_all(project_id, paper_mgr):
             paper_mgr.session.commit()
     print("[OK] Done!")
 
-# ==================== 3. PROJECT CHAT ====================
+# ==================== 3. PROJECT CHAT (PERSISTENT) ====================
 def project_chat_flow(project_id, paper_mgr):
     papers = paper_mgr.get_project_papers(project_id)
+    
+    # Get or create persistent chat
+    chats = chat_mgr.get_project_chats(project_id)
+    if chats:
+        chat = chats[0]
+        messages = chat_mgr.get_messages(chat.id)
+    else:
+        chat = chat_mgr.create_chat(project_id, "Research Chat")
+        messages = []
     
     print(f"""
 ╔══════════════════════════════════════════════╗
 ║  CHAT WITH PROJECT                           ║
-║  Uses your {len(papers)} papers + searches internet if needed ║
+║  {len(papers)} papers | {len(messages)} messages in history    ║
 ╚══════════════════════════════════════════════╝
 
 Type /search to force internet search. Type /back to exit.
 """)
     
+    # Show recent messages if any
+    if messages:
+        print("Recent conversation:")
+        for msg in messages[-4:]:
+            role = "You" if msg.role == "user" else "AI"
+            print(f"  {role}: {msg.content[:100]}...")
+        print()
+    
+    # Build paper context
     paper_context = ""
     if papers:
         paper_context = "\n\n".join([
@@ -432,6 +450,10 @@ Type /search to force internet search. Type /back to exit.
         if need_search:
             question = question[8:].strip()
         
+        # Save user message
+        chat_mgr.add_message(chat.id, "user", question)
+        
+        # Build prompt with context
         if paper_context and not need_search:
             prompt = f"""You are a medical research assistant. Answer using the user's papers if possible.
 
@@ -458,6 +480,7 @@ RESPONSE:"""
         response = model.generate(prompt, max_tokens=500)
         print(response)
         
+        # Handle internet search fallback
         if "NEED_SEARCH:" in response:
             search_query = response.split("NEED_SEARCH:")[1].strip().split("\n")[0]
             print(f"\nSearching internet for: {search_query}\n")
@@ -489,6 +512,7 @@ RESPONSE:"""
                 print("\nAI (from search): ", end="", flush=True)
                 response2 = model.generate(prompt2, max_tokens=500)
                 print(response2)
+                response = response2  # Save the search result
                 
                 if input("\nAdd these papers to your project? (y/n): ").strip().lower() == 'y':
                     for r in results[:8]:
@@ -504,8 +528,10 @@ RESPONSE:"""
                     ])
             else:
                 print("No results found. Try different keywords.")
+                response = "No results found for this search."
         
-        chat_mgr.add_message(chat_mgr.create_chat(project_id).id, "user", question)
+        # Save AI response
+        chat_mgr.add_message(chat.id, "assistant", response)
 
 # ==================== 4. DEEP RESEARCH ====================
 def deep_research_flow(project_id, paper_mgr):
@@ -519,6 +545,12 @@ def deep_research_flow(project_id, paper_mgr):
         print("No papers found.")
         return
     
+    # Show papers found
+    print(f"Found {len(papers)} papers. Top results:\n")
+    for i, p in enumerate(papers[:5], 1):
+        print(f"  [{i}] {p.title[:80]}")
+        print(f"      {p.authors[:50]} | {p.year} | {p.source}")
+    
     ctx = "\n\n".join([f"[{i+1}] {p.title}\n{p.abstract[:300] if p.abstract else ''}" 
                        for i, p in enumerate(papers[:8])])
     
@@ -531,7 +563,7 @@ Question: {question}
 Provide: Key Findings, Limitations, Research Gaps. Cite as [1],[2].
 
 ANALYSIS:"""
-    print("AI Analysis:\n" + "="*60)
+    print("\nAI Analysis:\n" + "="*60)
     print(model.generate(prompt, max_tokens=600))
     print("="*60)
     
@@ -611,34 +643,75 @@ def review_flow(project_id, paper_mgr):
     while True:
         status = workflow.get_status()
         print(f"""
-  Screened: {status['screened']}/{status['total_identified']} ({status['completion_pct']}%)
-  Included: {status['included']} | Excluded: {status['excluded']}
-  [1] Screen Next  [2] View Included  [3] Synthesis  [B] Back
+╔══════════════════════════════════════════════╗
+║  SYSTEMATIC REVIEW                           ║
+╚══════════════════════════════════════════════╝
+
+  Progress: {status['completion_pct']}% screened
+  Total: {status['total_identified']} | Screened: {status['screened']} | Remaining: {status['remaining']}
+  Included: {status['included']} | Excluded: {status['excluded']} | Maybe: {status['maybe']}
+
+  [1] Screen Next Paper
+  [2] View Included ({status['included']})
+  [3] Evidence Synthesis (needs included papers)
+  [B] Back
 """)
         c = input("> ").strip().lower()
         if c == 'b': break
         elif c == '1':
             p = workflow.get_next_unscreened()
             if p:
-                print(f"\n{p['title'][:80]}\n{p['abstract'][:300]}")
-                d = input("[I]nclude [E]xclude [M]aybe: ").strip().lower()
+                print(f"\n{'='*60}")
+                print(f"TITLE: {p['title'][:80]}")
+                print(f"{'='*60}")
+                print(f"Authors: {p['authors']}")
+                print(f"Year: {p['year']} | Source: {p['source']}")
+                print(f"\nAbstract: {textwrap.fill(p['abstract'][:400] if p['abstract'] else 'N/A', 55)}")
+                print(f"\nDecision: [I]nclude  [E]xclude  [M]aybe  [S]kip")
+                d = input("> ").strip().lower()
                 dm = {"i":"included","e":"excluded","m":"maybe"}
                 if d in dm:
-                    workflow.screen_paper(p["id"], dm[d], input("Reason: ").strip())
+                    reason = input("Reason: ").strip()
+                    workflow.screen_paper(p["id"], dm[d], reason)
+                    print(f"[OK] Marked as {dm[d]}")
+            else:
+                print("\nNo more papers to screen!")
         elif c == '2':
-            for i, p in enumerate(workflow.get_included_papers(), 1):
-                print(f"  [{i}] {p['title'][:70]}")
+            included = workflow.get_included_papers()
+            if included:
+                print(f"\nIncluded papers ({len(included)}):\n")
+                for i, p in enumerate(included, 1):
+                    print(f"  [{i}] {p['title'][:70]}")
+                    print(f"      {p['authors'][:50]} ({p['year']})")
+            else:
+                print("\nNo papers included yet. Screen some papers first with [1].")
         elif c == '3':
             from app.synthesis import SynthesisAnalyzer
-            s = SynthesisAnalyzer()
-            ids = [p["id"] for p in workflow.get_included_papers()]
-            if ids:
+            included = workflow.get_included_papers()
+            if not included:
+                print("\nNo papers included yet!")
+                print("Use [1] to screen papers. Mark relevant ones as Included.")
+                print("Then come back here for AI synthesis.")
+            else:
+                s = SynthesisAnalyzer()
+                ids = [p["id"] for p in included]
+                print(f"\nSynthesizing {len(ids)} included papers...\n")
                 result = s.synthesize(ids)
-                print(f"\n{result.get('evidence_summary','')[:500]}")
-                for f in result.get('key_findings',[])[:5]:
-                    print(f"  - {f}")
-            s.close()
-        input("Press Enter...")
+                print("="*60)
+                print("EVIDENCE SYNTHESIS")
+                print("="*60)
+                if result.get('evidence_summary'):
+                    print(f"\nSummary: {result['evidence_summary'][:500]}")
+                if result.get('evidence_strength'):
+                    print(f"\nStrength: {result['evidence_strength'][:200]}")
+                if result.get('key_findings'):
+                    print("\nKey Findings:")
+                    for f in result['key_findings'][:5]:
+                        print(f"  - {f}")
+                if result.get('limitations'):
+                    print(f"\nLimitations: {result['limitations'][:200]}")
+                s.close()
+        input("\nPress Enter...")
     workflow.close()
 
 # ==================== EVIDENCE ====================
@@ -667,7 +740,7 @@ def extract_evidence(paper, project_id):
 
 # ==================== MAIN ====================
 if __name__ == "__main__":
-    print("\nStarting Medical Research Agent...\n")
+    print("\nStarting PaperMate...\n")
     try:
         model.generate("OK", max_tokens=5)
         print("AI Ready.\n")
