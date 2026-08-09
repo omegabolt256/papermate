@@ -1,0 +1,111 @@
+## Installation
+
+### 1. Install Python
+Download from: https://python.org
+✅ Check "Add Python to PATH" during install
+
+### 2. Install Ollama
+Download from: https://ollama.com
+Then open terminal and run:
+```bash
+ollama pull llama3.2
+```
+
+### 3. Clone & Run
+```bash
+git clone https://github.com/omegabolt256/papermate.git
+cd papermate
+pip install -r requirements.txt
+python run.py
+```
+
+---
+
+## Usage
+
+### Create a Project
+```
+> N
+Project name: My Research
+```
+
+### Search Papers
+```
+> 1
+Search: liposomal drug delivery cancer
+> da    (add all results)
+> y     (download PDFs)
+```
+
+### View & Read Papers
+```
+> 2
+> V
+Paper number: 1
+> O     (opens PDF)
+> C     (copy citation)
+> F     (open folder → drag to Zotero)
+```
+
+### Chat with AI
+```
+> 3
+You: What do these papers say about nanoparticle size?
+```
+If your papers don't have the answer, it auto-searches internet.
+
+### Zotero Sync
+```
+> 6
+> 1    (configure)
+API Key: [from zotero.org/settings/keys]
+User ID: [from same page]
+> 2    (sync library)
+```
+
+### Export
+```
+> 5
+> 1    (BibTeX)
+> 2    (CSV)
+> 5    (Full Report)
+```
+
+---
+
+## Desktop Shortcut (Windows)
+
+Create a `.bat` file on desktop:
+```bat
+@echo off
+cd /d C:\Users\YOURNAME\papermate
+python run.py
+pause
+```
+
+---
+
+## Requirements
+
+| What | Why |
+|------|-----|
+| Python 3.10+ | Runs the app |
+| Ollama | Local AI (free, private) |
+| Zotero account | Reference sync (optional) |
+
+---
+
+## Features at a Glance
+
+| # | Feature |
+|---|---------|
+| 🔍 | Search PubMed, Semantic Scholar, arXiv |
+| 📥 | Download papers as PDFs |
+| 📄 | Open PDFs in your viewer |
+| 💬 | AI chat with internet fallback |
+| 📚 | Zotero sync |
+| 📂 | Watch folder auto-import |
+| ✅ | Systematic review screening |
+| 📊 | Evidence extraction |
+| 📝 | BibTeX, CSV, RIS export |
+| 🔒 | Everything runs locally |
