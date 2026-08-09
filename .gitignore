@@ -1,0 +1,12 @@
+venv/
+chroma_db/
+data/
+papers/
+papers_db.json
+ingestion_log.json
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+.env
+*.db
