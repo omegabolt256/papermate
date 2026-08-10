@@ -477,7 +477,7 @@ QUESTION: {question}
 RESPONSE:"""
         
         print("AI: ", end="", flush=True)
-        response = model.generate(prompt, max_tokens=500)
+        response = model.generate(prompt, max_tokens=350)
         print(response)
         
         # Handle internet search fallback
@@ -510,7 +510,7 @@ Answer with citations as [SEARCH 1], [SEARCH 2], etc.
 RESPONSE:"""
                 
                 print("\nAI (from search): ", end="", flush=True)
-                response2 = model.generate(prompt2, max_tokens=500)
+                response2 = model.generate(prompt2, max_tokens=350)
                 print(response2)
                 response = response2  # Save the search result
                 
@@ -564,7 +564,7 @@ Provide: Key Findings, Limitations, Research Gaps. Cite as [1],[2].
 
 ANALYSIS:"""
     print("\nAI Analysis:\n" + "="*60)
-    print(model.generate(prompt, max_tokens=600))
+    print(model.generate(prompt, max_tokens=400))
     print("="*60)
     
     if input("\nAdd these papers to project? (y/n): ").strip().lower() == 'y':
@@ -741,9 +741,10 @@ def extract_evidence(paper, project_id):
 # ==================== MAIN ====================
 if __name__ == "__main__":
     print("\nStarting PaperMate...\n")
+    print("Loading AI model...", end=" ", flush=True)
     try:
         model.generate("OK", max_tokens=5)
-        print("AI Ready.\n")
+        print("Ready!\n")
     except:
-        print("AI offline - some features limited.\n")
+        print("offline (some features limited)\n")
     dashboard()
