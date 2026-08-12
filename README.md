@@ -1,56 +1,32 @@
 # 📄 PaperMate
 
-AI-powered research assistant for medical and academic research.
+AI-powered research assistant. Search, download, read, and chat with academic papers.
 
 ## Features
-
-- 🔍 **Multi-source search** — PubMed, Semantic Scholar, arXiv
-- 📥 **One-click downloads** — Get PDFs instantly
-- 💬 **Smart chat** — AI answers from your papers + searches internet if needed
-- 📚 **Zotero sync** — Auto-import your Zotero library
-- 📂 **Watch folder** — Drop PDFs to auto-import
-- ✅ **Systematic review** — Screen, synthesize, PRISMA tracking
-- 📊 **Evidence extraction** — Structured data from papers
-- 📝 **Export** — BibTeX, CSV, RIS, reports
-- 🔒 **100% local** — Uses Ollama, nothing leaves your machine
+- 🔍 4 free search sources: PubMed, Europe PMC, OpenAlex, arXiv
+- 📥 Smart downloads: Unpaywall + arXiv + PMC
+- 💬 Chat with AI about your papers (Ollama, local)
+- 📝 Citations saved to file
+- 📁 Projects for organizing research
+- 🔒 100% local, no API keys required
 
 ## Quick Start
-
 ```bash
-# Install Ollama
-# https://ollama.com
-ollama pull llama3.2
-
-# Clone and run
-git clone https://github.com/omegabolt256/papermate.git
-cd papermate
 pip install -r requirements.txt
+ollama pull llama3.2
 python run.py
-
-Usage
-
-[N] New Project
-[1] Search & Add Papers
-[2] My Papers
-[3] Chat with Project (AI + Internet)
-[4] Deep Research
-[5] Export & Reports
-[6] Zotero Sync
-[7] Systematic Review
-[S] Saved Searches
-[W] Watch Folder
+Audit
+bash
+python audit.py
+100% pass rate.
 
 Tech Stack
 Python 3.10+
 
-Ollama + Llama 3.2 (local AI)
+Ollama + Llama 3.2
 
-PyMuPDF (PDF processing)
+PyMuPDF
 
-SQLite (storage)
+SQLite
 
-Zotero API (reference sync)
-
-License
-MIT
-
+Unpaywall API (free)
