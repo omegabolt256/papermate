@@ -176,18 +176,39 @@ def open_pdf(paper, pid):
         print(f"{R}Not found. Use [B] to open in browser.{X}")
 
 def download_all(pid, pm):
+    from config.settings import ZOTERO_API_KEY, ZOTERO_USER_ID
+    from app.integrations.zotero import ZoteroClient
+    from app.integrations.zotero.sync import ZoteroSync
+    
     papers = pm.get_project_papers(pid)
     td = [p for p in papers if not p.full_text_available and p.pdf_url]
     if not td: print("All downloaded."); return
+    
+    # Initialize Zotero if configured
+    zotero = ZoteroClient()
+    if ZOTERO_API_KEY and ZOTERO_USER_ID:
+        zotero.configure(ZOTERO_API_KEY, ZOTERO_USER_ID)
+    syncer = ZoteroSync(zotero, pid) if zotero.connected else None
+    
     print(f"\nDownloading {len(td)}...\n")
     dl = PaperDownloader(project_mgr.get_project_dir(pid)/"PDFs")
     for i, p in enumerate(td, 1):
         print(f"  [{i}/{len(td)}] {p.title[:50]}...")
         s, m, path = dl.download(p)
         print(f"    -> {m}")
-        if s: pm.update_paper(p.id, full_text_available=True, pdf_path=path); pm.session.commit()
-    print(f"{G}[OK]{X}")
-
+        if s:
+            pm.update_paper(p.id, full_text_available=True, pdf_path=path)
+            pm.session.commit()
+            # Auto-save to Zotero
+            if syncer:
+                try:
+                    syncer._sync_item_from_paper(p)
+                    print(f"    -> Saved to Zotero")
+                except:
+                    print(f"    -> Zotero save failed (will retry later)")
+    
+    if syncer: syncer.close()
+    print(f"[OK] Done!")
 # ==================== CHAT ====================
 def chat_flow(pid, pm):
     chats = chat_mgr.get_project_chats(pid)
