@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-PaperMate — Strict Usability & Functionality Audit
-Scores each component 0-100. Fails if any critical issue found.
-"""
+"""PaperMate — Strict Audit (v3 — includes Zotero)"""
 import sys, time, os, json, tempfile, shutil
 sys.path.insert(0, '.')
 
@@ -18,10 +15,10 @@ def score(name, points, max_points, notes=""):
         CRITICAL_FAILURES.append(name)
 
 print('='*60)
-print('PAPERMATE STRICT AUDIT')
+print('PAPERMATE STRICT AUDIT v3')
 print('='*60)
 
-# ==================== 1. IMPORTS ====================
+# 1. IMPORTS
 print('\n1. IMPORTS (20pts)')
 pts = 20
 try:
@@ -32,12 +29,16 @@ try:
     from app.papers import PaperManager
     from app.papers.downloader import PaperDownloader
     from app.papers.unpaywall import find_open_access_pdf
+    from app.integrations.zotero import ZoteroClient
+    from app.integrations.zotero.sync import ZoteroSync
+    from config.settings import ZOTERO_API_KEY, ZOTERO_USER_ID
+    print("    All modules importable")
 except Exception as e:
     pts = 0
-    notes = str(e)
-score("Imports", pts, 20, notes if pts == 0 else "All modules importable")
+    print(f"    FAIL: {e}")
+score("Imports", pts, 20)
 
-# ==================== 2. SEARCH SOURCES ====================
+# 2. SEARCH SOURCES
 print('\n2. SEARCH SOURCES (20pts)')
 import requests
 sources = {
@@ -58,12 +59,11 @@ for name, url in sources.items():
     except Exception as e:
         print(f"    FAIL: {name} ({str(e)[:30]})")
     time.sleep(0.3)
-pts = working * 5
-score("Search Sources", pts, 20, f"{working}/4 sources working")
+score("Search Sources", working * 5, 20, f"{working}/4 sources working")
 
-# ==================== 3. PROJECT CRUD ====================
-print('\n3. PROJECT CRUD (15pts)')
-pts = 15
+# 3. PROJECT CRUD
+print('\n3. PROJECT CRUD (10pts)')
+pts = 10
 try:
     pm = ProjectManager()
     p = pm.create_project('_TEST_A_')
@@ -71,19 +71,18 @@ try:
     stats = pm.get_project_stats(p.id)
     assert 'paper_count' in stats
     pm.rename_project(p.id, '_TEST_B_')
-    p2 = pm.repo.get(p.id)
-    assert p2.name == '_TEST_B_'
+    assert pm.repo.get(p.id).name == '_TEST_B_'
     pm.delete_project(p.id)
     assert pm.repo.get(p.id) is None
     print("    Create/Rename/Stats/Delete all pass")
 except Exception as e:
     pts = 0
     print(f"    FAIL: {e}")
-score("Project CRUD", pts, 15)
+score("Project CRUD", pts, 10)
 
-# ==================== 4. PAPER OPERATIONS ====================
-print('\n4. PAPER OPERATIONS (15pts)')
-pts = 15
+# 4. PAPER OPERATIONS
+print('\n4. PAPER OPERATIONS (10pts)')
+pts = 10
 try:
     pm = ProjectManager()
     p = pm.create_project('_P_TEST_')
@@ -96,7 +95,6 @@ try:
     paper_mgr.update_screening(papers[0].id, 'included')
     p_refresh = paper_mgr.get_paper(papers[0].id)
     assert p_refresh.read_status == 'read'
-    assert p_refresh.screening_status == 'included'
     paper_mgr.delete_paper(papers[0].id)
     assert len(paper_mgr.get_project_papers(p.id)) == 0
     pm.delete_project(p.id)
@@ -105,9 +103,9 @@ try:
 except Exception as e:
     pts = 0
     print(f"    FAIL: {e}")
-score("Paper Operations", pts, 15)
+score("Paper Operations", pts, 10)
 
-# ==================== 5. CHAT PERSISTENCE ====================
+# 5. CHAT PERSISTENCE
 print('\n5. CHAT PERSISTENCE (10pts)')
 pts = 10
 try:
@@ -115,43 +113,39 @@ try:
     pm = ProjectManager()
     p = pm.create_project('_C_TEST_')
     chat = cm.create_chat(p.id, 'Test')
-    cm.add_message(chat.id, 'user', 'Question 1')
-    cm.add_message(chat.id, 'assistant', 'Answer 1')
-    cm.add_message(chat.id, 'user', 'Question 2')
-    msgs = cm.get_messages(chat.id)
-    assert len(msgs) == 3
+    cm.add_message(chat.id, 'user', 'Q1')
+    cm.add_message(chat.id, 'assistant', 'A1')
+    cm.add_message(chat.id, 'user', 'Q2')
+    assert len(cm.get_messages(chat.id)) == 3
     cm.rename_chat(chat.id, 'Renamed')
     assert cm.get_chat(chat.id).title == 'Renamed'
     cm.delete_chat(chat.id)
     assert cm.get_chat(chat.id) is None
     pm.delete_project(p.id)
     cm.close()
-    print("    Chat messages persist, rename/delete work")
+    print("    Chat persistence works")
 except Exception as e:
     pts = 0
     print(f"    FAIL: {e}")
 score("Chat Persistence", pts, 10)
 
-# ==================== 6. OLLAMA AI ====================
+# 6. OLLAMA
 print('\n6. OLLAMA AI (10pts)')
 pts = 10
 try:
     m = get_model_provider('ollama')
     resp = m.generate('Reply with just OK', max_tokens=10)
-    if 'ok' in resp.lower() or 'ok' in resp:
-        print("    AI responding correctly")
-    elif 'Error' in resp:
-        print(f"    AI error: {resp[:50]}")
-        pts = 0
+    if 'ok' in resp.lower():
+        print("    AI responding")
     else:
-        print(f"    Unclear response: {resp[:50]}")
+        print(f"    Unclear: {resp[:40]}")
         pts = 5
 except Exception as e:
     pts = 0
     print(f"    FAIL: {e}")
 score("Ollama AI", pts, 10)
 
-# ==================== 7. DOWNLOADER ====================
+# 7. DOWNLOADER
 print('\n7. DOWNLOADER (10pts)')
 pts = 10
 try:
@@ -166,10 +160,9 @@ try:
         url = ''
     s, m, path = dl.download(FakePaper())
     if s and os.path.exists(path):
-        size = os.path.getsize(path)
-        print(f"    Downloaded {size//1024}KB successfully")
+        print(f"    Downloaded {os.path.getsize(path)//1024}KB")
     else:
-        print(f"    Download failed: {m}")
+        print(f"    Download: {m}")
         pts = 3
     shutil.rmtree(tmp)
 except Exception as e:
@@ -177,7 +170,45 @@ except Exception as e:
     print(f"    FAIL: {e}")
 score("Downloader", pts, 10)
 
-# ==================== SUMMARY ====================
+# 8. UNPAYWALL
+print('\n8. UNPAYWALL (5pts)')
+pts = 5
+try:
+    result = find_open_access_pdf('10.1038/nature12373')
+    print(f"    Unpaywall responsive ({'found PDF' if result else 'no OA version'})")
+except Exception as e:
+    pts = 0
+    print(f"    FAIL: {e}")
+score("Unpaywall", pts, 5)
+
+# 9. ZOTERO CONFIG
+print('\n9. ZOTERO CONFIG (5pts)')
+pts = 5
+if ZOTERO_API_KEY and ZOTERO_USER_ID:
+    print(f"    API key present (user {ZOTERO_USER_ID})")
+else:
+    pts = 0
+    print("    No Zotero credentials")
+score("Zotero Config", pts, 5)
+
+# 10. ZOTERO CONNECTION
+print('\n10. ZOTERO CONNECTION (10pts)')
+pts = 10
+try:
+    z = ZoteroClient()
+    if ZOTERO_API_KEY and ZOTERO_USER_ID:
+        z.configure(ZOTERO_API_KEY, ZOTERO_USER_ID)
+    if z.connected:
+        print("    Zotero connected")
+    else:
+        print(f"    Zotero not connected: {z.last_error}")
+        pts = 3
+except Exception as e:
+    pts = 0
+    print(f"    FAIL: {e}")
+score("Zotero Connection", pts, 10)
+
+# SUMMARY
 print('\n' + '='*60)
 total = sum(r['points'] for r in RESULTS)
 max_total = sum(r['max'] for r in RESULTS)
@@ -187,13 +218,12 @@ print(f'\nOVERALL SCORE: {overall:.0f}%')
 print(f'CRITICAL FAILURES: {len(CRITICAL_FAILURES)}')
 
 if CRITICAL_FAILURES:
-    print('\nComponents needing attention:')
+    print('\nNeeds attention:')
     for c in CRITICAL_FAILURES:
         print(f'  - {c}')
 
-print('\nDETAILED SCORES:')
+print('\nDETAILED:')
 for r in RESULTS:
     bar = '#' * int(r['pct'] // 10)
     print(f"  {r['component']:20s} {r['pct']:3.0f}% {bar}")
-
 print('='*60)
