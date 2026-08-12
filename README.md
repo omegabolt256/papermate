@@ -48,3 +48,102 @@ pip install -r requirements.txt
 Step 5: Run
 bash
 python run.py
+🎯 Usage
+text
+  PROJECTS
+
+  [N] New Project
+  [D] Delete Project
+  [Q] Quit
+Open a project and you'll see:
+
+text
+  [1] Search & Add Papers
+  [2] My Papers (view, open PDFs, cite)
+  [3] Chat with AI
+  [4] Zotero Sync
+  [B] Back
+Search Papers
+Type any topic: leukemia liposomes
+Results from 4 sources. Add all with da or pick specific with d 3.
+
+My Papers
+O — Open PDF in your viewer
+
+B — Open in browser (for paywalled papers)
+
+C — Copy citation (saved to citations.txt)
+
+Z — Save to Zotero
+
+DL — Download all PDFs
+
+Chat with AI
+Ask anything about your papers. AI cites them as [PAPER 1], [PAPER 2]. If your papers don't have the answer, it says so.
+
+Zotero Sync
+1 — Import your Zotero library into the project
+
+2 — Push all project papers to Zotero
+
+🔑 Zotero Setup (Optional)
+Go to zotero.org/settings/keys
+
+Click "Create new private key"
+
+Check: Allow library access, Allow notes access, Allow write access
+
+Click Save Key
+
+Copy the key and your User ID
+
+Edit config/settings.py:
+
+python
+ZOTERO_API_KEY = "your-key-here"
+ZOTERO_USER_ID = "your-user-id"
+✅ Audit
+Run the test suite:
+
+bash
+python audit.py
+Current: 100% pass — 10/10 components functional
+
+🛠️ Tech Stack
+Python 3.10+
+
+Ollama + Llama 3.2
+
+PyMuPDF (PDF processing)
+
+SQLite (storage)
+
+Unpaywall API (free open access finder)
+
+Zotero API (reference sync)
+
+📁 Project Structure
+text
+papermate/
+├── app/
+│   ├── search/          # Search adapters (4 sources)
+│   ├── papers/          # Downloader, Unpaywall, manager
+│   ├── projects/        # Project management
+│   ├── chats/           # Chat system
+│   ├── models/          # Ollama provider
+│   ├── database/        # SQLite models
+│   └── integrations/
+│       └── zotero/      # Zotero client + sync
+├── config/
+│   └── settings.py      # Configuration
+├── run.py               # Main program
+├── audit.py             # Test suite
+├── requirements.txt
+└── README.md
+📝 License
+MIT — Free to use, modify, and share.
+
+⭐ Support
+Star this repo if you find it useful!
+
+Built with ❤️ for researchers.
