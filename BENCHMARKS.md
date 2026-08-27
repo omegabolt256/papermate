@@ -1,62 +1,67 @@
-# 📊 PaperMate Benchmarks
+# ðŸ“Š PaperMate Benchmarks
 
-**Status: DEVELOPING**
+## Verified Measurements
 
-## Verified
+| Metric | Value | Type |
+|---|---:|---|
+| Direct Ollama inference | **1.16 s** | Measured |
+| Ollama models observed | **7** | Observed inventory |
+| Verified research HTTP status | **200** | Measured |
+| Sources in verified research run | **3** | Measured |
+| Evidence records | **3** | Measured |
+| Claims | **1** | Measured |
+| Citations | **2** | Measured |
+| References | **2** | Measured |
+| Citation validation | **PASSED** | Measured |
 
-| Metric | Result |
-|---|---:|
-| Ollama model | qwen2.5:3b |
-| Direct inference | **1.16 s** |
-| Ollama models observed | **7** |
-| Verified research sources | **3** |
-| Evidence records | **3** |
-| Claims | **1** |
-| Citations | **2** |
-| References | **2** |
-| Citation validation | **PASSED** |
+## Direct Model Baseline
 
-## Local Models
+```text
+Model:       qwen2.5:3b
+Endpoint:    127.0.0.1:11434
+Mode:        non-streaming HTTP
+Latency:     1.16 s
+```
 
-1. qwen2.5:3b
-2. sage-browser-vl:latest
-3. qwen3-vl:2b
-4. ge-m3:latest
-5. gemma3:1b-it-qat
-6. qwen3:1.7b
-7. llama3.2:latest
+## Important Distinction
 
-## Future Measurements
+Raw model latency is only one part of a research request.
 
-- Time to first token
-- Total research latency
-- Search latency
-- LLM latency
-- Number of search calls
-- Number of model calls
-- CPU usage
-- RAM usage
-- GPU usage
-- VRAM usage
-- Source quality
-- Evidence quality
-- Citation accuracy
+```text
+Search
+  +
+Retrieval
+  +
+Evidence processing
+  +
+Model inference
+  +
+Claim validation
+  +
+Citation rendering
+  =
+Total research latency
+```
 
-## Comparison
+## Planned Benchmark Set
 
-`	ext
-              SAME HARDWARE
-                    │
-          ┌─────────┴─────────┐
-          ▼                   ▼
-        VANE             PAPERMATE
-          │                   │
-          └─────────┬─────────┘
-                    ▼
-              SAME TEST SET
-                    │
-                    ▼
-              SYSTEM RESULTS
-`
+| Metric | Vane | PaperMate |
+|---|---|---|
+| Time to first token | Pending | Pending |
+| Total latency | Pending | Pending |
+| Search latency | Pending | Pending |
+| Model latency | Pending | Pending |
+| Search calls | Pending | Pending |
+| Model calls | Pending | Pending |
+| Answer quality | Pending | Pending |
+| Evidence grounding | Pending | Pending |
+| Citation accuracy | Pending | Pending |
+| CPU usage | Pending | Pending |
+| RAM usage | Pending | Pending |
+| GPU usage | Pending | Pending |
+| VRAM usage | Pending | Pending |
+| Failure rate | Pending | Pending |
 
-Only measured values should be presented as benchmarks.
+## Benchmark Policy
+
+Only numbers backed by an actual test are labelled as measured. Estimates, targets and future values remain explicitly marked as such.
