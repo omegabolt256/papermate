@@ -1,26 +1,40 @@
-# âš¡ PaperMate
+# PaperMate
 
-> **Local-first research intelligence infrastructure for evidence-grounded AI.**
+> Local-first research intelligence infrastructure for evidence-grounded AI.
 
 [![Status](https://img.shields.io/badge/status-DEVELOPING-orange?style=for-the-badge)](STATUS.md)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Ollama](https://img.shields.io/badge/LLM-Ollama-black?style=for-the-badge)](https://ollama.com/)
 [![SearXNG](https://img.shields.io/badge/Search-SearXNG-purple?style=for-the-badge)](https://docs.searxng.org/)
 
-PaperMate is an experimental **research backend** built around a simple idea:
+PaperMate is an experimental research backend designed to turn web research
+into structured, traceable, evidence-grounded output.
 
-> **Research should be traceable, not merely generated.**
+Instead of:
 
-Instead of treating web search as a prompt for an unconstrained answer, PaperMate separates research into explicit stages and preserves the relationships between **sources, evidence, claims, citations, and provenance**.
+```text
+Search -> Prompt -> Answer
+```
+
+PaperMate is built around:
+
+```text
+Search -> Evidence -> Claims -> Validation -> Citations -> Answer
+```
+
+**Current state: DEVELOPING**
+
+The architecture remains intentionally open while PaperMate is evaluated against
+other local research systems and deployment approaches.
 
 ---
 
-## ðŸ“Œ At a Glance
+## At a Glance
 
 | Metric | Verified value |
 |---|---:|
 | Research API | `POST /research` |
-| Successful research test | **HTTP 200** |
+| Successful research run | `HTTP 200` |
 | Sources in verified run | **3** |
 | Evidence records | **3** |
 | Claims | **1** |
@@ -32,85 +46,80 @@ Instead of treating web search as a prompt for an unconstrained answer, PaperMat
 | Search backend | SearXNG |
 | Inference backend | Ollama |
 
-> The numbers above are development measurements, not production benchmarks.
+> These figures are development measurements, not production benchmarks.
 
 ---
 
-## ðŸ§¬ Research Pipeline
+## Research Pipeline
 
-![PaperMate research pipeline](docs/assets/pipeline.svg)
-
-The core flow is:
-
-```text
-Question
-   â†“
-Search
-   â†“
-Retrieval
-   â†“
-Evidence
-   â†“
-Claims
-   â†“
-Validation
-   â†“
-Citations
-   â†“
-Structured answer
+```mermaid
+flowchart LR
+    A[Question] --> B[Search]
+    B --> C[Retrieval]
+    C --> D[Evidence]
+    D --> E[Claims]
+    E --> F[Validation]
+    F --> G[Citations]
+    G --> H[Structured Answer]
 ```
+
+The core research path is deliberately decomposed so the system can retain
+more than a final answer.
 
 ### Evidence chain
 
-```text
-SOURCE
-  â†“
-EVIDENCE
-  â†“
-CLAIM
-  â†“
-CITATION
-  â†“
-ANSWER
+```mermaid
+flowchart LR
+    A[Source] --> B[Evidence]
+    B --> C[Claim]
+    C --> D[Citation]
+    D --> E[Answer]
 ```
 
-This structure is the central architectural idea behind PaperMate. The answer is not the only artifact produced by research; the intermediate provenance is part of the output.
+This chain is the central design idea behind PaperMate: research output should
+remain traceable to the material used to produce it.
 
 ---
 
-## ðŸ” What PaperMate Currently Provides
+## What PaperMate Currently Provides
 
 ### Research
 
-PaperMate can perform a research request against retrieved web material and return a structured research object.
+A structured research pipeline that retrieves external information and turns
+it into a machine-readable research result.
 
 ### Evidence
 
-Evidence is kept as a first-class object with an association to the source that produced it.
+Evidence is represented as a first-class object and remains associated with
+the source from which it was obtained.
 
 ### Claims
 
-Claims are represented separately from the final answer and retain the evidence IDs used to support them.
+Claims are represented separately from the final answer and retain the
+evidence IDs used to support them.
 
 ### Citation validation
 
-The research pipeline validates the relationship between generated claims and retrieved evidence before returning a successful research result.
+The pipeline checks the relationship between generated claims and their
+associated evidence before returning a successful cited research result.
 
 ### Provenance
 
-Research responses retain execution metadata describing the pipeline and model run used to produce the result.
+Research responses retain execution metadata describing the pipeline and model
+run used to produce the result.
 
 ### Local inference
 
-Ollama is used as the local inference layer, keeping the core research path compatible with a local-first deployment.
+Ollama provides local model inference for the core generation path.
 
 ### Memory
 
-The repository also contains an experimental memory layer centered around MemPalace. This part of the system is still under development.
+The repository contains an experimental memory layer centered around
+MemPalace. Memory functionality is still under development.
 
 ---
 
-## âš™ï¸ Current Stack
+## Current Stack
 
 | Layer | Current implementation |
 |---|---|
@@ -126,196 +135,229 @@ The repository also contains an experimental memory layer centered around MemPal
 ### Local endpoints
 
 ```text
-Ollama   â†’ http://127.0.0.1:11434
-SearXNG  â†’ local Docker service / port 8080
-Research â†’ POST /research
+Ollama    -> http://127.0.0.1:11434
+SearXNG   -> local Docker service / port 8080
+Research  -> POST /research
 ```
 
 ---
 
-## ðŸ§ª Verified Research Run
+## Verified Research Run
 
-The following request has been exercised successfully:
+The following question has been successfully exercised through the PaperMate
+research API:
 
-> **What are randomized controlled trials used for?**
+> What are randomized controlled trials used for?
 
-The verified output contained:
+### Returned structure
 
-- **3** sources
-- **3** evidence records
-- **1** claim
-- **2** citations
-- **2** references
-- citation validation: **passed**
+| Output | Count |
+|---|---:|
+| Sources | **3** |
+| Evidence records | **3** |
+| Claims | **1** |
+| Citations | **2** |
+| References | **2** |
 
-The reported execution pipeline was:
+Citation validation:
+
+**PASSED**
+
+### Reported execution pipeline
 
 ```text
 searxng
-   â†“
+   |
+   v
 evidence
-   â†“
+   |
+   v
 ollama
-   â†“
+   |
+   v
 claim_validation
-   â†“
+   |
+   v
 citation_rendering
 ```
 
-This is the current end-to-end proof that the main research path works as intended.
+This is the current end-to-end verification that the main research path can
+execute and return structured evidence and citation metadata.
 
 ---
 
-## âš¡ Local Model Baseline
+## Local Model Baseline
 
-A direct HTTP request to Ollama using `qwen2.5:3b` was measured at approximately:
+A direct HTTP request to local Ollama using `qwen2.5:3b` was measured at:
 
-# **1.16 seconds**
+**1.16 seconds**
 
-That measurement is intentionally labelled as a **raw inference baseline**.
+Test characteristics:
 
-It does **not** represent full research latency. A real research operation also includes source discovery, retrieval, evidence processing, validation, and response generation.
+| Parameter | Value |
+|---|---|
+| Model | `qwen2.5:3b` |
+| Endpoint | `127.0.0.1:11434` |
+| Mode | Non-streaming HTTP |
+| Result | Successful |
+| Measured latency | **1.16 s** |
 
-![Benchmark overview](docs/assets/benchmark.svg)
+This is a raw inference measurement only.
+
+It does not represent complete research latency, which also includes search,
+retrieval, evidence processing, validation, and synthesis.
 
 ---
 
-## ðŸ§  Model Inventory
+## Local Model Inventory
 
-The local Ollama installation observed during development contained **7 models**:
+The Ollama installation observed during development contained **7 models**:
 
 | # | Model | Role observed |
 |---:|---|---|
-| 1 | `qwen2.5:3b` | General local LLM / verified research model |
-| 2 | `sage-browser-vl:latest` | Local multimodal model |
-| 3 | `qwen3-vl:2b` | Local multimodal model |
+| 1 | `qwen2.5:3b` | Verified research model |
+| 2 | `sage-browser-vl:latest` | Multimodal model |
+| 3 | `qwen3-vl:2b` | Multimodal model |
 | 4 | `bge-m3:latest` | Embedding candidate |
 | 5 | `gemma3:1b-it-qat` | General local model |
 | 6 | `qwen3:1.7b` | Lightweight local model |
 | 7 | `llama3.2:latest` | General local model |
 
-Model selection remains an implementation decision rather than a permanent commitment.
+Model selection remains an implementation decision.
 
 ---
 
-## ðŸ§± System Architecture
+## Research Data Model
 
-PaperMate is split into several logical boundaries:
+PaperMate separates the main research artifacts:
 
 ```text
-                        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                        â”‚   Application    â”‚
-                        â”‚  Vane / Clients  â”‚
-                        â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                                 â”‚
-                                 â–¼
-                        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                        â”‚   Intelligence   â”‚
-                        â”‚     Gateway      â”‚
-                        â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                                 â”‚
-              â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-              â”‚                  â”‚                  â”‚
-              â–¼                  â–¼                  â–¼
-       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-       â”‚  Research  â”‚     â”‚   Memory   â”‚     â”‚ Providers  â”‚
-       â”‚  Pipeline  â”‚     â”‚ MemPalace  â”‚     â”‚   Ollama   â”‚
-       â””â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜
-             â”‚                                      â”‚
-             â–¼                                      â–¼
-       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-       â”‚  SearXNG   â”‚                       â”‚ Local LLMs â”‚
-       â””â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜                       â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-             â”‚
-             â–¼
-       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-       â”‚  Evidence  â”‚
-       â””â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜
-             â”‚
-             â–¼
-       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-       â”‚   Claims   â”‚
-       â””â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜
-             â”‚
-             â–¼
-       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-       â”‚ Validation â”‚
-       â””â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜
-             â”‚
-             â–¼
-       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-       â”‚ Citations  â”‚
-       â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+Source
+  |
+  +--> Evidence
+          |
+          +--> Claim
+                  |
+                  +--> Citation
 ```
 
-Each layer is intended to be replaceable without forcing the entire system to change with it.
+### Source
+
+```text
+source_id
+title
+url
+authors
+year
+source_type
+```
+
+### Evidence
+
+```text
+evidence_id
+source_id
+content
+location
+page
+quote
+```
+
+### Claim
+
+```text
+claim_id
+text
+evidence_ids[]
+```
+
+### Citation
+
+```text
+citation_id
+source_id
+title
+url
+evidence_ids[]
+```
+
+This makes the answer traceable to the evidence behind individual claims.
 
 ---
 
-## ðŸ”Œ API Contract
+## Architecture
 
-### `POST /research`
-
-Example request:
-
-```json
-{
-  "question": "What are randomized controlled trials used for?",
-  "max_sources": 3,
-  "require_citations": true
-}
+```mermaid
+flowchart TB
+    APP[AI / Client] --> G[Research API]
+    G --> R[Research Pipeline]
+    G --> M[Memory Layer]
+    R --> S[SearXNG]
+    R --> E[Evidence Layer]
+    E --> C[Claim Layer]
+    C --> V[Validation]
+    V --> CI[Citation Rendering]
+    R --> O[Ollama]
+    O --> L[qwen2.5:3b]
 ```
 
-The response contains structured fields for:
-
-```text
-answer
-sources[]
-evidence[]
-claims[]
-citations[]
-references[]
-model_runs[]
-provenance
-```
-
-See [API.md](API.md) for the detailed contract.
-
----
-
-## ðŸ›¡ï¸ Why the Evidence Layer Exists
-
-A conventional research assistant can collapse the entire process into:
-
-```text
-Search â†’ Prompt â†’ Answer
-```
-
-PaperMate instead aims for:
+The major boundaries are intentionally independent:
 
 ```text
 Search
-  â†“
-Retrieved material
-  â†“
-Evidence extraction
-  â†“
-Claim construction
-  â†“
-Claim/evidence validation
-  â†“
-Citation rendering
-  â†“
-Answer
+Inference
+Research
+Evidence
+Validation
+Memory
+Storage
 ```
 
-That extra structure makes the research process inspectable and gives downstream applications more than just a string of generated text.
+The goal is to allow individual components to change without forcing the
+entire system to change with them.
 
 ---
 
-## ðŸ§  Memory Layer
+## Why the Evidence Layer Exists
 
-PaperMate includes an experimental memory subsystem using MemPalace-related components.
+A conventional research assistant may collapse the workflow into:
+
+```text
+Search -> Answer
+```
+
+PaperMate instead exposes the intermediate research artifacts:
+
+```text
+Search
+  |
+  v
+Retrieved material
+  |
+  v
+Evidence extraction
+  |
+  v
+Claim construction
+  |
+  v
+Claim/evidence validation
+  |
+  v
+Citation rendering
+  |
+  v
+Answer
+```
+
+The additional structure makes the research process inspectable and gives
+downstream systems more than an answer string.
+
+---
+
+## Memory Layer
+
+PaperMate contains an experimental memory subsystem based around MemPalace.
 
 Current work includes:
 
@@ -325,128 +367,152 @@ Current work includes:
 - gateway integration
 - memory probing
 
-Memory is deliberately separated from the research pipeline so that persistent context can evolve independently of search and synthesis.
+Memory is deliberately separated from the research pipeline so persistent
+context can evolve independently.
 
 ---
 
-## ðŸ³ Vane Evaluation
+## Vane Evaluation
 
 Vane integration is currently **experimental**.
 
-A previous attempt to deeply modify Vane's native research path introduced unnecessary configuration and performance complexity, so that work was rolled back.
+An earlier attempt to modify Vane's native research pipeline introduced
+unnecessary configuration and performance complexity and was rolled back.
 
-The current plan is intentionally open-ended:
+The current approach is deliberately open-ended.
 
-```text
-Official Vane Docker
-          â†“
-     Local Ollama
-          â†“
-      Benchmark
-          â†“
- â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”
- â”‚                 â”‚
- â–¼                 â–¼
-Vane           PaperMate
- â”‚                 â”‚
- â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-          â–¼
-   System comparison
+```mermaid
+flowchart TB
+    A[Same Hardware] --> V[Vane]
+    A --> P[PaperMate]
+    V --> B[Benchmark]
+    P --> B
+    B --> Q[Quality]
+    B --> L[Latency]
+    B --> R[Resource Usage]
+    B --> C[Citation Accuracy]
 ```
 
-Possible long-term outcomes include:
+The comparison will use equivalent workloads on the same hardware.
 
-- Vane alone
-- PaperMate alone
-- Vane + PaperMate
-- a hybrid research architecture
-- independent systems
+### Possible outcomes
 
-No outcome is assumed in advance.
+```text
+Vane only
+PaperMate only
+Vane + PaperMate
+Hybrid research architecture
+Independent systems
+```
 
-See [docs/VANE_INTEGRATION.md](docs/VANE_INTEGRATION.md).
+No outcome is predetermined.
 
 ---
 
-## ðŸ“ˆ What Will Be Measured Next
+## Benchmark Plan
 
-The next benchmark set will compare complete systems on the same hardware.
-
-| Metric | Direction |
+| Metric | Desired direction |
 |---|---|
-| Answer quality | Higher is better |
-| Research depth | Higher is better |
-| Evidence grounding | Higher is better |
-| Citation accuracy | Higher is better |
-| Time to first token | Lower is better |
-| Total latency | Lower is better |
-| Search latency | Lower is better |
-| Model latency | Lower is better |
-| CPU usage | Lower is better |
-| RAM usage | Lower is better |
-| GPU usage | Lower is better |
-| VRAM usage | Lower is better |
-| Failure rate | Lower is better |
+| Answer quality | Higher |
+| Research depth | Higher |
+| Evidence grounding | Higher |
+| Citation accuracy | Higher |
+| Time to first token | Lower |
+| Total latency | Lower |
+| Search latency | Lower |
+| Model latency | Lower |
+| CPU usage | Lower |
+| RAM usage | Lower |
+| GPU usage | Lower |
+| VRAM usage | Lower |
+| Failure rate | Lower |
 
-No future performance number will be presented as a measured benchmark until it has actually been tested.
+No future result will be labelled as a measured benchmark until the underlying
+test has actually been performed.
 
 ---
 
-## ðŸ“ Repository Layout
+## Development Roadmap
+
+### Completed
+
+- Research backend foundation
+- SearXNG integration
+- Ollama integration
+- Evidence model
+- Claim model
+- Citation rendering
+- Citation validation
+- Provenance
+- Initial memory layer
+- Automated research tests
+
+### Developing
+
+- Memory quality evaluation
+- Source ranking
+- Evidence quality scoring
+- Research caching
+- Intelligence gateway hardening
+- Reproducible benchmarking
+- Resource monitoring
+
+### Next
+
+- Official Vane Docker evaluation
+- Same-hardware Vane benchmark
+- Same-hardware PaperMate benchmark
+- Research quality comparison
+- Citation comparison
+- Resource comparison
+- Architecture decision
+
+---
+
+## Repository Layout
 
 ```text
 PaperMate/
-â”‚
-â”œâ”€â”€ backend/          API and backend services
-â”œâ”€â”€ intelligence/     Intelligence contracts and providers
-â”œâ”€â”€ memory/           Memory contracts and MemPalace
-â”œâ”€â”€ research/         Research/search logic
-â”œâ”€â”€ infra/            Infrastructure configuration
-â”œâ”€â”€ tests/            Automated tests
-â”œâ”€â”€ docs/             Engineering documentation
-â”‚   â””â”€â”€ assets/       README diagrams
-â”œâ”€â”€ data/             Local runtime data (ignored)
-â”‚
-â”œâ”€â”€ README.md
-â”œâ”€â”€ STATUS.md
-â”œâ”€â”€ ROADMAP.md
-â”œâ”€â”€ ARCHITECTURE.md
-â””â”€â”€ BENCHMARKS.md
+|
++-- backend/
+|   +-- api/
+|   +-- intelligence/
+|   +-- memory/
+|   +-- provenance/
+|   +-- research/
+|   +-- retrieval/
+|   +-- tools/
+|
++-- intelligence/
++-- memory/
++-- research/
++-- infra/
++-- tests/
++-- docs/
+|
++-- README.md
++-- STATUS.md
++-- ROADMAP.md
++-- ARCHITECTURE.md
++-- BENCHMARKS.md
 ```
 
 ---
 
-## ðŸš§ Development Status
+## Development Status
 
-### **ðŸŸ  DEVELOPING**
+**DEVELOPING**
 
-PaperMate is an active engineering project rather than a finished product.
+PaperMate is an active engineering project, not a finished product.
 
-The project is currently focused on:
+Architecture, model selection, deployment strategy, and subsystem boundaries
+may change as experiments produce new evidence.
 
-1. Research quality
-2. Evidence and citation reliability
-3. Memory evaluation
-4. Local deployment
-5. Reproducible benchmarking
-6. Comparison against official Vane deployment
-
-The architecture may change as experiments produce new evidence.
+The immediate objective is to build the most useful research system for the
+available hardware and to let measured results determine the architecture.
 
 ---
 
-## ðŸ—ºï¸ Documentation
-
-- [Project status](STATUS.md)
-- [Roadmap](ROADMAP.md)
-- [Architecture](ARCHITECTURE.md)
-- [API](API.md)
-- [Benchmarks](BENCHMARKS.md)
-- [Vane integration](docs/VANE_INTEGRATION.md)
-- [Sage lessons](docs/SAGE_LESSONS.md)
-
----
-
-## ðŸŽ¯ Engineering Principle
+## Engineering Principle
 
 > **Measure first. Integrate only when the evidence justifies the complexity.**
