@@ -1,32 +1,49 @@
-# PaperMate Roadmap
+# 🧭 PaperMate Roadmap
 
-## Status
+**Status: DEVELOPING**
 
-**DEVELOPING**
+## Completed
 
-## Progress
+- [x] Research backend foundation
+- [x] SearXNG integration
+- [x] Ollama integration
+- [x] Evidence model
+- [x] Claim model
+- [x] Citation rendering
+- [x] Citation validation
+- [x] Provenance
+- [x] Initial memory layer
+- [x] Automated research tests
 
-| Component | Status |
-|---|---|
-| Research pipeline | 100% |
-| Citation system | 100% |
-| SearXNG | 100% |
-| Ollama | 100% |
-| Memory | Developing |
-| Intelligence gateway | Developing |
-| Vane evaluation | Next |
-| Docker deployment | Planned |
-| Benchmarking | Planned |
+## Developing
+
+- [ ] Memory quality evaluation
+- [ ] Source ranking
+- [ ] Evidence quality scoring
+- [ ] Research caching
+- [ ] Gateway hardening
+- [ ] Reproducible benchmarks
 
 ## Next
 
-1. Run official Vane Docker deployment
-2. Connect Vane to local Ollama
-3. Establish Vane baseline
-4. Benchmark PaperMate
-5. Compare latency and quality
-6. Decide between Vane, PaperMate, or a hybrid architecture
+- [ ] Official Vane Docker deployment
+- [ ] Same-hardware Vane benchmark
+- [ ] Same-hardware PaperMate benchmark
+- [ ] Compare answer quality
+- [ ] Compare research depth
+- [ ] Compare citation accuracy
+- [ ] Compare latency and resource usage
 
-## Principle
+## Open Architecture
 
-No architectural decision is final until both systems are tested on the same hardware.
+Possible future directions:
+
+`	ext
+Vane only
+PaperMate only
+Vane + PaperMate
+Hybrid
+Independent systems
+`
+
+No outcome is predetermined.
