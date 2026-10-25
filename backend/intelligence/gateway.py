@@ -1,11 +1,14 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
 
 from backend.intelligence.context_compressor import ContextCompressor
 from backend.intelligence.providers.base import IntelligenceProvider
-from backend.tools.memory import MemPalaceTool
+from typing import Protocol
+
+class MemoryProvider(Protocol):
+    def search(self, query: str, *, wing: str | None = None, limit: int = 5) -> list[Any]: ...
 
 
 @dataclass
@@ -43,13 +46,13 @@ class IntelligenceGateway:
         *,
         provider_name: str,
         model_name: str,
-        memory: MemPalaceTool | None = None,
+        memory: MemoryProvider | None = None,
         compressor: ContextCompressor | None = None,
     ) -> None:
         self.provider = provider
         self.provider_name = provider_name
         self.model_name = model_name
-        self.memory = memory or MemPalaceTool()
+        self.memory = memory
         self.compressor = compressor or ContextCompressor()
 
     def generate(
@@ -59,7 +62,7 @@ class IntelligenceGateway:
 
         memory_results = []
 
-        if request.use_memory:
+        if request.use_memory and self.memory is not None:
             memory_results = self.memory.search(
                 request.prompt,
                 wing=request.project_id,

@@ -91,7 +91,12 @@ RULES:
 9. Do not cite a source unless the supplied evidence supports the claim.
 10. Prefer narrower claims over broader claims when evidence is limited.
 11. If only one part of a proposed statement is supported, state only that supported part.
-12. The answer must contain only claims represented in the claims array.
+12. Each claim must contain exactly ONE independently verifiable factual statement.
+13. Never combine trial design, outcomes, population, and implications into a single claim.
+14. Assign evidence IDs separately to each claim; cite only excerpts that directly support that claim.
+15. Keep each claim concise. Split compound sentences into multiple claims with unique sequential IDs.
+16. The answer must contain only claims represented in the claims array.
+
 
 Return JSON only.
 
@@ -139,6 +144,7 @@ def synthesize(
     }
 
     claims: list[Claim] = []
+    seen_claim_ids: set[str] = set()
 
     for item in raw_claims:
         if not isinstance(item, dict):
@@ -150,10 +156,13 @@ def synthesize(
         text = item.get("text")
         raw_evidence_ids = item.get("evidence_ids")
 
-        if not isinstance(claim_id, str):
-            raise ValueError(
-                "Claim has invalid claim_id."
-            )
+        if not isinstance(claim_id, str) or not claim_id.strip():
+            raise ValueError("Claim has invalid or empty claim_id.")
+
+        if claim_id in seen_claim_ids:
+            raise ValueError(f"Duplicate claim_id: {claim_id}")
+
+        seen_claim_ids.add(claim_id)
 
         if not isinstance(text, str) or not text.strip():
             raise ValueError(

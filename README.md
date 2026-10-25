@@ -114,8 +114,8 @@ Ollama provides local model inference for the core generation path.
 
 ### Memory
 
-The repository contains an experimental memory layer centered around
-MemPalace. Memory functionality is still under development.
+The experimental memory integration has been removed. Generic memory
+contracts remain available for future implementations.
 
 ---
 
@@ -128,7 +128,7 @@ MemPalace. Memory functionality is still under development.
 | LLM inference | Ollama |
 | Tested LLM | `qwen2.5:3b` |
 | Embedding candidate | `bge-m3:latest` |
-| Memory | MemPalace prototype |
+| Memory | Generic contracts; no active provider |
 | Storage | Local project/storage layers |
 | Tests | Python test suite |
 
@@ -355,17 +355,10 @@ downstream systems more than an answer string.
 
 ---
 
-## Memory Layer
+## Memory Contracts
 
-PaperMate contains an experimental memory subsystem based around MemPalace.
-
-Current work includes:
-
-- memory contracts
-- storage
-- retrieval experiments
-- gateway integration
-- memory probing
+PaperMate retains generic memory contracts for future implementations.
+No active memory provider or memory service is included.
 
 Memory is deliberately separated from the research pipeline so persistent
 context can evolve independently.

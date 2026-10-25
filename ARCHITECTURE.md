@@ -15,7 +15,7 @@
           â”‚                  â”‚                  â”‚
           â–¼                  â–¼                  â–¼
       Research             Memory            Providers
-      Pipeline            MemPalace           Ollama
+      Pipeline            No provider           Ollama
           â”‚                                     â”‚
           â–¼                                     â–¼
        SearXNG                              Local Models
